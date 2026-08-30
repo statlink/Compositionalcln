@@ -1,0 +1,84 @@
+\name{cln.mle}
+\alias{cln.mle}
+
+\title{
+Maximum likelihood estimation of the conditional logistic normal model
+}
+
+\description{
+Maximum likelihood estimation of the conditional logistic normal model.
+}
+
+\usage{
+cln.mle(y, tol = 1e-6, maxit = 500)
+}
+
+\arguments{
+\item{y}{
+A numerical matrix with compositional data with zero values.
+}
+\item{tol}{
+The tolerance value to terminate the EM algorithm.
+}
+\item{maxit}{
+The maximum number of iterations allowed for the EM algorithm.
+}
+}
+
+\details{
+The function fits the conditional multivariate normal distribution described in Aitchison (1986), pages
+}
+
+\value{
+A list including:
+\item{m}{
+The mean vector in the Euclidean space.
+}
+\item{mesi}{
+The mean vector in the simplex space.
+}
+\item{S}{
+The estimated covariance matrix.
+}
+\item{loglik}{
+The log-likelhiood value.
+}
+\item{patterns}{
+A matrix with the patterns of zeros, where the value of 0 indicates the presence of a zero,
+and the last column contains the percentage of occurrence each pattern. This is useful for
+random values simulation.
+}
+\item{iters}{
+The number of iterations required by the EM algorithm.
+}
+}
+
+\references{
+Aitchison J. (1986). The statistical analysis of compositional data, pages 272--274.
+}
+
+\author{
+Michail Tsagris.
+
+R implementation and documentation: Michail Tsagris \email{mtsagris@uoc.gr}.
+}
+
+%\note{
+%%  ~~further notes~~
+%}
+
+\seealso{
+\code{ \link{cln.reg}
+}
+}
+
+\examples{
+y <- as.matrix(iris[, 1:3])
+y <- y / rowSums(y)
+ind <- sample(150, 10)
+for ( k in ind )  y[k, sample(3, 1)] <- 0
+y <- y / rowSums(y)
+cln.mle(y)
+}
+
+

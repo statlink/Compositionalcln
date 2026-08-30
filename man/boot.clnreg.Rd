@@ -1,0 +1,77 @@
+\name{boo.clnreg}
+\alias{boot.clnreg}
+\title{
+Bootstrap for the conditional logistic normal regression
+}
+
+\description{
+Bootstrap for the conditional logistic normal regression.
+}
+
+\usage{
+boot.clnreg(y, x, tol = 1e-6, maxit = 500, R = 1000)
+}
+
+\arguments{
+\item{y}{
+A matrix with the compositional data (dependent variable). The number of observations
+(vectors) with no zero values should be more than the columns of the predictor variables.
+Otherwise, the initial values will not be calculated.
+}
+\item{x}{
+The predictor variable(s), they can be either continnuous or categorical or both.
+}
+\item{tol}{
+The tolerance value to terminate the EM algorithm.
+}
+\item{maxit}{
+The maximum number of iterations allowed for the EM algorithm.
+}
+\item{R}{
+The number of bootstrap resamples to perform.
+}
+}
+
+\details{
+Bootstrap to estimate the covariance matrix of the coefficients of the conditional
+logistic normal regression is performed.
+}
+
+\value{
+A list including:
+\item{beta}{
+The bootstrapped beta coefficients.
+}
+\item{sigma}{
+The bootstrap estimate of the covariance matrix of the regression parameters.
+}
+}
+
+%\references{
+%}
+
+\author{
+Michail Tsagris.
+
+R implementation and documentation: Michail Tsagris \email{mtsagris@uoc.gr}.
+}
+
+%\note{
+%%  ~~further notes~~
+%}
+
+\seealso{
+\code{\link{cln.reg}
+}
+}
+
+\examples{
+x <- as.vector(iris[, 4])
+y <- as.matrix(iris[, 1:3])
+y <- y / rowSums(y)
+ind <- sample(150, 10)
+for ( k in ind )  y[k, sample(3, 1)] <- 0
+y <- y / rowSums(y)
+mod <- cln.reg(y, x)
+}
+
