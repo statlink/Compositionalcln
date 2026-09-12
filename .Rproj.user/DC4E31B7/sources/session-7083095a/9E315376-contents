@@ -1,0 +1,13 @@
+#useDynLib(MXM, .registration = TRUE)
+
+importFrom("rangen", Sample.int)
+importFrom("Rfast", rowsums, mahala)
+importFrom("stats", var, cov, model.matrix)
+
+importFrom("mziln", mziln)
+importFrom("grDevices", colorRampPalette)
+importFrom("graphics", axis, contour, filled.contour, par, points, text,
+           legend, lines, segments)
+
+exportPattern("^[[:alpha:]]+")
+exportPattern("^[^\\.]")
