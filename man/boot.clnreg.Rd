@@ -1,4 +1,4 @@
-\name{boo.clnreg}
+\name{boot.clnreg}
 \alias{boot.clnreg}
 \title{
 Bootstrap for the conditional logistic normal regression
