@@ -42,7 +42,7 @@ cln.reg <- function(y, x, tol = 1e-6, maxit = 500, seb = FALSE, xnew = NULL) {
 
   loglik.old <- .loglik.zero.norm.reg(B, S, x1, x2, full, y1, y2, sly1, Q.list, obs.list)
 
-  Vi.list <- vector("list", n2)
+  Vi.list <- vector("list", n2)      # conditional covariances V_i (eq. 7b), kept for Louis' method
 
   for ( it in 1:maxit ) {
 
@@ -63,7 +63,7 @@ cln.reg <- function(y, x, tol = 1e-6, maxit = 500, seb = FALSE, xnew = NULL) {
 
     Z <- rbind(full, Ez)
     X <- rbind(x1, x2)
-    B <- solve( crossprod(X), crossprod(X, Z) )
+    B <- solve( crossprod(X), crossprod(X, Z) )         # GLS reduces to OLS (common S)
     res1 <- full - x1 %*% B
     res2 <- Ez - x2 %*% B
     S <- ( crossprod(res1) + crossprod(res2) + EzzVarSum ) / n
