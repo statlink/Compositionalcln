@@ -1,7 +1,7 @@
-cln.residplot <- function(y, m, S, x = NULL, beta = NULL) {
+cln.residplot <- function(y, m = NULL, S, x = NULL, beta = NULL) {
 
   n <- dim(y)[1]   ;   D <- dim(y)[2]   ;   d <- D - 1
-  if ( is.null(x) ) {
+  if ( !is.null(m) ) {
     M <- matrix(m, n, d, byrow = TRUE)
     p <- 1
   } else {
