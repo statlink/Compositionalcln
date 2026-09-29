@@ -1,0 +1,68 @@
+\name{cln.biplot}
+\alias{cln.biplot}
+
+\title{
+Biplot based on the conditional logistic normal model
+}
+
+\description{
+Biplot based on the conditional logistic normal model.
+}
+
+\usage{
+cln.biplot(y, m, S)
+}
+
+\arguments{
+\item{y}{
+A vector or a matrix with compositional data with zero values.
+}
+\item{m}{
+The mean vector in \eqn{R^{D-1}}.
+}
+\item{S}{
+The covariance matrix in \eqn{R^{D-1}}.
+}
+}
+
+\details{
+The function first transforms the covariance matrix that is based on the alr transformation to
+the covariance matrix based on the clr transformation. Then, for the vectors with zero values it uses
+the vectors with the estimated zis on the alr-space (see Alzeley and Tsagris, 2026) from the EM algorithm.
+Then it produces the classical biplot. The observations that contain zero values will be plotted
+with a red colour and the observations with no zero values are plotted with a grey colour.
+}
+
+\value{
+The biplot of the alr transformed data.
+}
+
+\references{
+Alzeley O. and Tsagris M. (2026). Modelling compositional data with structural zero values
+https://arxiv.org/pdf/2608.29954
+
+Aitchison J. (1986). The statistical analysis of compositional data.
+}
+
+\author{
+Michail Tsagris.
+
+R implementation and documentation: Michail Tsagris \email{mtsagris@uoc.gr}.
+}
+
+\seealso{
+\code{ \link{cln.biplot}, \link{cln.contour}, \link{cln.mle}
+}
+}
+
+\examples{
+y <- as.matrix(iris[, 1:4])
+y <- y / rowSums(y)
+ind <- sample(150, 10)
+for ( k in ind )  y[k, sample(4, 1)] <- 0
+y <- y / rowSums(y)
+mod <- cln.mle(y)
+cln.biplot(y, mod$m, mod$S)
+}
+
+
