@@ -34,35 +34,37 @@ cln.regs <- function(y, X, tol = 1e-6, maxit = 500) {
     z1 <- y2[i, ]  ;  z1 <- matrix( z1[ z1 > 0 ], nrow = 1 )
     obs.list[[ i ]] <- if ( C > 2 )  drop( log(z1[, -C] / z1[, C]) )  else log(z1[, 1] / z1[, 2])
   }
-
+  
+  y <- rbind(y1, y2)
   lik0 <- Compositionalcln::cln.mle(y, tol, maxit)$loglik 
 
   for ( j in 1:p ) {
     x1 <- cbind(1, X1[, j])
     x2 <- cbind(1, X2[, j])
-    B <- mziln::mziln(y, X[, j])$be
+    XX <- rbind(x1, x2)
+    B <- mziln::mziln(y, XX[, 2])$be
     res1 <- full - x1 %*% B
     S <- crossprod(res1) / n1
     Ez <- matrix(0, n2, d)
+    XXinv <- solve( crossprod(XX) )
     loglik.old <- .loglik.zero.norm.reg(B, S, x1, x2, full, y1, y2, sly1, Q.list, obs.list)
     for ( it in 1:maxit ) {
 
       EzzVarSum <- 0
       for ( i in 1:n2 ) {
         Qi <- Q.list[[ i ]]
-        b  <- obs.list[[ i ]]
+        b <- obs.list[[ i ]]
         mu_i <- drop( crossprod(B, x2[i, ]) )
         muA <- drop( Qi %*% mu_i )
-        SA  <- Qi %*% S %*% t(Qi)
-        K   <- S %*% t(Qi) %*% solve(SA)
-        ez  <- mu_i + drop( K %*% (b - muA) )
-        vz  <- S - K %*% Qi %*% S
+        SA <- Qi %*% S %*% t(Qi)
+        K  <- S %*% t(Qi) %*% solve(SA)
+        ez <- mu_i + drop( K %*% (b - muA) )
+        vz <- S - K %*% Qi %*% S
         Ez[i, ] <- ez
         EzzVarSum <- EzzVarSum + vz
       }
       Z <- rbind(full, Ez)
-      XX <- rbind(x1, x2)
-      B <- solve( crossprod(XX), crossprod(XX, Z) )         # GLS reduces to OLS (common S)
+      B <- XXinv %*% crossprod(XX, Z)  # GLS reduces to OLS (common S)
       res1 <- full - x1 %*% B
       res2 <- Ez - x2 %*% B
       S <- ( crossprod(res1) + crossprod(res2) + EzzVarSum ) / n

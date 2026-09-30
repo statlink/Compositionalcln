@@ -41,8 +41,9 @@ cln.reg <- function(y, x, tol = 1e-6, maxit = 500, seb = FALSE, xnew = NULL) {
   Ez <- matrix(0, n2, d)
 
   loglik.old <- .loglik.zero.norm.reg(B, S, x1, x2, full, y1, y2, sly1, Q.list, obs.list)
-
   Vi.list <- vector("list", n2)
+  X <- rbind(x1, x2)
+  XXinv <- solve( crossprod(X) )
 
   for ( it in 1:maxit ) {
 
@@ -62,8 +63,7 @@ cln.reg <- function(y, x, tol = 1e-6, maxit = 500, seb = FALSE, xnew = NULL) {
     }
 
     Z <- rbind(full, Ez)
-    X <- rbind(x1, x2)
-    B <- solve( crossprod(X), crossprod(X, Z) )
+    B <- XXinv %*% crossprod(X, Z) 
     res1 <- full - x1 %*% B
     res2 <- Ez - x2 %*% B
     S <- ( crossprod(res1) + crossprod(res2) + EzzVarSum ) / n
@@ -104,7 +104,7 @@ cln.reg <- function(y, x, tol = 1e-6, maxit = 500, seb = FALSE, xnew = NULL) {
   ll2 <- 0
   for ( i in seq_len(n2) ) {
     Qi <- Q.list[[ i ]]
-    b  <- obs.list[[ i ]]
+    b <- obs.list[[ i ]]
     mu_i <- drop( crossprod(B, x2[i, ]) )
     muA <- drop( Qi %*% mu_i )
     SA  <- Qi %*% S %*% t(Qi)
