@@ -92,7 +92,6 @@ R implementation and documentation: Michail Tsagris \email{mtsagris@uoc.gr}.
 \examples{
 x <- as.vector(iris[, 4])
 y <- as.matrix(iris[, 1:3])
-y <- y / rowSums(y)
 ind <- sample(150, 10)
 for ( k in ind )  y[k, sample(3, 1)] <- 0
 y <- y / rowSums(y)

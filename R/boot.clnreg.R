@@ -30,7 +30,8 @@ boot.clnreg <- function(y, x, tol = 1e-6, maxit = 500, R = 1000) {
     obs.list[[ i ]] <- if ( C > 2 )  drop( log(z1[, -C] / z1[, C]) )  else log(z1[, 1] / z1[, 2])
   }
 
-  B <- mziln::mziln(y, x[, -1])$be
+  ## starting values: OLS regression on complete cases only
+  B <- solve( crossprod(x1), crossprod(x1, full) )
   res1 <- full - x1 %*% B
   S <- crossprod(res1) / n1
   Ez <- matrix(0, n2, d)

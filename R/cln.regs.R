@@ -34,15 +34,16 @@ cln.regs <- function(y, X, tol = 1e-6, maxit = 500) {
     z1 <- y2[i, ]  ;  z1 <- matrix( z1[ z1 > 0 ], nrow = 1 )
     obs.list[[ i ]] <- if ( C > 2 )  drop( log(z1[, -C] / z1[, C]) )  else log(z1[, 1] / z1[, 2])
   }
-  
+
   y <- rbind(y1, y2)
-  lik0 <- Compositionalcln::cln.mle(y, tol, maxit)$loglik 
+  lik0 <- Compositionalcln::cln.mle(y, tol, maxit)$loglik
 
   for ( j in 1:p ) {
     x1 <- cbind(1, X1[, j])
     x2 <- cbind(1, X2[, j])
     XX <- rbind(x1, x2)
-    B <- mziln::mziln(y, XX[, 2])$be
+    #B <- mziln::mziln(y, XX[, 2])$be
+    B <- solve( crossprod(x1), crossprod(x1, full) )
     res1 <- full - x1 %*% B
     S <- crossprod(res1) / n1
     Ez <- matrix(0, n2, d)

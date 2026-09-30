@@ -46,13 +46,14 @@ cln.condregs <- function(y, X, prior, tol = 1e-6, maxit = 500) {
   for ( j in 1:p ) {
     x1 <- cbind(1, X1[, j], prior1)
     x2 <- cbind(1, X2[, j], prior2)
-    B <- mziln::mziln(y, cbind(X[, j], prior) )$be
+    #B <- mziln::mziln(y, cbind(X[, j], prior) )$be
+    B <- solve( crossprod(x1), crossprod(x1, full) )
     res1 <- full - x1 %*% B
     S <- crossprod(res1) / n1
     Ez <- matrix(0, n2, d)
     loglik.old <- .loglik.zero.norm.reg(B, S, x1, x2, full, y1, y2, sly1, Q.list, obs.list)
-    X <- rbind(x1, x2)
-    XXinv <- solve( crossprod(X) )
+    XX <- rbind(x1, x2)
+    XXinv <- solve( crossprod(XX) )
     for ( it in 1:maxit ) {
       EzzVarSum <- 0
       for ( i in 1:n2 ) {
@@ -68,7 +69,7 @@ cln.condregs <- function(y, X, prior, tol = 1e-6, maxit = 500) {
         EzzVarSum <- EzzVarSum + vz
       }
       Z <- rbind(full, Ez)
-      B <- XXinv %*% crossprod(X, Z)
+      B <- XXinv %*% crossprod(XX, Z)
       res1 <- full - x1 %*% B
       res2 <- Ez - x2 %*% B
       S <- ( crossprod(res1) + crossprod(res2) + EzzVarSum ) / n

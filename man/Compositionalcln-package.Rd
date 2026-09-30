@@ -14,7 +14,7 @@ Modelling Compositional Data with Zero Values.
 Package: \tab Compositionalcln\cr
 Type: \tab Package\cr
 Version: \tab 1.1 \cr
-Date: \tab 2026-09-29 \cr
+Date: \tab 2026-09-30 \cr
 }
 }
 

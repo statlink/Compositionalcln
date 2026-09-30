@@ -35,7 +35,7 @@ cln.reg <- function(y, x, tol = 1e-6, maxit = 500, seb = FALSE, xnew = NULL) {
     obs.list[[ i ]] <- if ( C > 2 )  drop( log(z1[, -C] / z1[, C]) )  else log(z1[, 1] / z1[, 2])
   }
   ## starting values: OLS regression on complete cases only
-  B <- mziln::mziln(y, x[, -1])$be
+  B <- solve( crossprod(x1), crossprod(x1, full) )
   res1 <- full - x1 %*% B
   S <- crossprod(res1) / n1
   Ez <- matrix(0, n2, d)
@@ -63,7 +63,7 @@ cln.reg <- function(y, x, tol = 1e-6, maxit = 500, seb = FALSE, xnew = NULL) {
     }
 
     Z <- rbind(full, Ez)
-    B <- XXinv %*% crossprod(X, Z) 
+    B <- XXinv %*% crossprod(X, Z)
     res1 <- full - x1 %*% B
     res2 <- Ez - x2 %*% B
     S <- ( crossprod(res1) + crossprod(res2) + EzzVarSum ) / n
