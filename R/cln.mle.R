@@ -22,7 +22,7 @@ cln.mle <- function(y, tol = 1e-6, maxit = 500) {
   for ( i in 1:n2 ) {
     z <- mat[i, ]  ;  C <- sum(z)  ;  c <- C - 1
     Sm <- diag(z)
-    Sm <- matrix( Sm[Rfast::rowsums(Sm) > 0, ], ncol = D)
+    Sm <- matrix( Sm[Rfast::rowsums(Sm) > 0, ], ncol = D )
     Q.list[[ i ]] <- F(c) %*% Sm %*% com
     z1 <- y2[i, ]  ;  z1 <- matrix( z1[ z1 > 0 ], nrow = 1 )
     obs.list[[ i ]] <- if ( C > 2 )  drop( log(z1[, -C] / z1[, C]) )  else log(z1[, 1] / z1[, 2])
