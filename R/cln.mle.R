@@ -1,13 +1,18 @@
-cln.mle <- function(y, tol = 1e-6, maxit = 500) {
+cln.mle2 <- function(y, tol = 1e-6, maxit = 500) {
   D <- dim(y)[2]  ;  d <- D - 1
   n <- dim(y)[1]
   y1 <- y[Rfast::rowsums(y > 0) == D, ] ;  n1 <- dim(y1)[1]
   sly1 <- sum( log(y1) )
   y2 <- y[Rfast::rowsums(y > 0) != D, ]
   if (n - n1 == 1)  y2 <- matrix(y2, nrow = 1)  ;  n2 <- dim(y2)[1]
+  sly2 <- sum( log(y2[y2>0]) )
+
+  mfull <- Rfast::colsums(full)
+  sfull <- crossprod(full)
+
   full <- log( y1[, -D] / y1[, D] )
   mat <- matrix( as.numeric(y2 != 0), nrow = n2 )
-
+  
   theta <- table( apply(1 - mat, 1, paste, collapse = ",") )
   theta <- as.vector(theta)
   const <- n1 * log(n1/n) + sum( theta * log(theta/n) )
@@ -24,12 +29,12 @@ cln.mle <- function(y, tol = 1e-6, maxit = 500) {
     Sm <- diag(z)
     Sm <- matrix( Sm[Rfast::rowsums(Sm) > 0, ], ncol = D )
     Q.list[[ i ]] <- F(c) %*% Sm %*% com
-    z1 <- y2[i, ]  ;  z1 <- matrix( z1[ z1 > 0 ], nrow = 1 )
-    obs.list[[ i ]] <- if ( C > 2 )  drop( log(z1[, -C] / z1[, C]) )  else log(z1[, 1] / z1[, 2])
+    z1 <- y2[i, ]  ;  z1 <- z1[ z1 > 0 ]
+    obs.list[[ i ]] <- if ( C > 2 )  log(z1[-C] / z1[C])  else log(z1[1] / z1[2])
   }
 
   Ez <- matrix(0, n2, d)
-  loglik.old <- .loglik.zero.norm(m, S, full, y1, y2, sly1, Q.list, obs.list)
+  loglik.old <- .loglik.zero.norm(m, S, full, y1, y2, sly1, sly2, Q.list, obs.list)
 
   for ( it in 1:maxit ) {
     EzzSum <- 0
@@ -45,9 +50,9 @@ cln.mle <- function(y, tol = 1e-6, maxit = 500) {
       EzzSum <- EzzSum + vz + tcrossprod(ez)
     }
 
-    m <- ( Rfast::colsums(full) + Rfast::colsums(Ez) ) / n
-    S <- ( crossprod(full) + EzzSum) / n - tcrossprod(m)
-    loglik.new <- .loglik.zero.norm(m, S, full, y1, y2, sly1, Q.list, obs.list)
+    m <- ( mfull + Rfast::colsums(Ez) ) / n
+    S <- ( sfull + EzzSum ) / n - tcrossprod(m)
+    loglik.new <- .loglik.zero.norm(m, S, full, y1, y2, sly1, sly2, Q.list, obs.list)
     if ( abs(loglik.new - loglik.old) < tol )  break
     loglik.old <- loglik.new
   }
@@ -57,9 +62,8 @@ cln.mle <- function(y, tol = 1e-6, maxit = 500) {
 }
 
 
-.loglik.zero.norm <- function(m, S, full, y1, y2, sly1, Q.list, obs.list){
+.loglik.zero.norm <- function(m, S, full, y1, y2, sly1, sly2, Q.list, obs.list){
   n1 <- dim(y1)[1]  ;  n2 <- dim(y2)[1] ;  d <- length(m)
-  #Sinv <- solve(S)
   ll1 <-  - 0.5 * n1 * log( det(2 * pi * S) ) - 0.5 * sum( Rfast::mahala(full, m, S) ) - sly1
   ll2 <- 0
   for ( i in seq_len(n2) ) {
@@ -68,12 +72,11 @@ cln.mle <- function(y, tol = 1e-6, maxit = 500) {
     muA <- drop(Qi %*% m)
     SA <- Qi %*% S %*% t(Qi)
     Ci <- length(b) + 1                     # number of nonzero parts
-    z1 <- y2[i, ]  ;  z1 <- z1[z1 > 0]
     if ( Ci > 2 ) {
-      ll2 <- ll2 - 0.5 * log( det(2 * pi * SA) ) - 0.5 * t(b - muA) %*% solve(SA, b - muA) - sum( log(z1) )
+      ll2 <- ll2 - 0.5 * log( det(2 * pi * SA) ) - 0.5 * t(b - muA) %*% solve(SA, b - muA)
     } else {
-      ll2 <- ll2 - 0.5 * log(2 * pi * SA) - 0.5 * (b - muA)^2/SA - sum( log(z1) )
+      ll2 <- ll2 - 0.5 * log(2 * pi * SA) - 0.5 * (b - muA)^2/SA
     }
   }
-  as.numeric(ll1 + ll2)
+  as.numeric(ll1 + ll2 - sly2)
 }
