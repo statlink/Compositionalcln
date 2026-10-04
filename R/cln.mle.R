@@ -1,4 +1,4 @@
-cln.mle2 <- function(y, tol = 1e-6, maxit = 500) {
+cln.mle <- function(y, tol = 1e-6, maxit = 500) {
   D <- dim(y)[2]  ;  d <- D - 1
   n <- dim(y)[1]
   y1 <- y[Rfast::rowsums(y > 0) == D, ] ;  n1 <- dim(y1)[1]
