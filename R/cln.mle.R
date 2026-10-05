@@ -7,12 +7,11 @@ cln.mle <- function(y, tol = 1e-6, maxit = 500) {
   if (n - n1 == 1)  y2 <- matrix(y2, nrow = 1)  ;  n2 <- dim(y2)[1]
   sly2 <- sum( log(y2[y2>0]) )
 
+  full <- log( y1[, -D] / y1[, D] )
   mfull <- Rfast::colsums(full)
   sfull <- crossprod(full)
 
-  full <- log( y1[, -D] / y1[, D] )
-  mat <- matrix( as.numeric(y2 != 0), nrow = n2 )
-  
+  mat <- matrix( as.numeric(y2 != 0), nrow = n2 ) 
   theta <- table( apply(1 - mat, 1, paste, collapse = ",") )
   theta <- as.vector(theta)
   const <- n1 * log(n1/n) + sum( theta * log(theta/n) )
@@ -20,7 +19,7 @@ cln.mle <- function(y, tol = 1e-6, maxit = 500) {
 
   F <- function(d)  cbind( diag(d), -1)
   H <- function(d)  diag(d) + 1
-  m <- Rfast::colmeans(full) ;  S <- ( (n1 - 1)/n1 ) * var(full)
+  m <- mfull/n1   ;   S <- ( (n1 - 1)/n1 ) * var(full)
   Q.list <- vector("list", n2)  ;  obs.list <- vector("list", n2)
   com <- t( F(d) ) %*% solve( H(d) )
 
