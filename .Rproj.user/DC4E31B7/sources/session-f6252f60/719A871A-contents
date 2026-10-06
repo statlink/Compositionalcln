@@ -1,26 +1,27 @@
-\name{cln.cr}
-\alias{cln.cr}
+\name{cln.bcr}
+\alias{cln.bcr}
 \title{
-Confidence region of the simplicial mean on a ternary diagram
+Non-parametric confidence region of the simplicial mean on a ternary diagram
 }
 
 \description{
-Confidence region of the simplicial mean on a ternary diagram.
+Non-parametric confidence region of the simplicial mean on a ternary diagram.
 }
 
 \usage{
-cln.cr(y, m, S, alpha = 0.05, dg = TRUE, hg = TRUE, ploty = TRUE)
+cln.bcr(y, tol = 1e-6, maxit = 500, alpha = 0.05, R = 1000,
+dg = TRUE, hg = TRUE, ploty = TRUE)
 }
 
 \arguments{
 \item{y}{
 A matrix with the compositional data (with zero values).
 }
-\item{m}{
-A value with the mean vector in \eqn{S^2}.
+\item{tol}{
+The tolerance value to terminate the EM algorithm.
 }
-\item{S}{
-The covariance matrix in \eqn{S^2}.
+\item{maxit}{
+The maximum number of iterations allowed for the EM algorithm.
 }
 \item{alpha}{
 The significance level to construct the (1-alpha)\% confidence region.
@@ -37,14 +38,18 @@ Do you want to plot the data as well?
 }
 
 \details{
-The confidence region of the mean in \eqn{S^2} is constructed and then mapped back onto the simplex.
+A non-parametric confidence region of the mean in \eqn{S^2} is constructed based
+on the method of Fiksel, Zeger and Datta (2022).
 }
 
 \value{
-A ternary diagram with the simplicial mean and the confidence region.
+A ternary diagram with the simplicial mean and the non-parametric confidence region.
 }
 
 \references{
+Fiksel J., Zeger S. and Datta A. (2022). A transformation-free linear regression for
+compositional outcomes and predictors. Biometrics, 78(3): 974--987.
+
 Alzeley O. and Tsagris M. (2026). Modelling compositional data with structural zero values
 https://arxiv.org/pdf/2608.29954
 
@@ -58,7 +63,7 @@ R implementation and documentation: Michail Tsagris \email{mtsagris@uoc.gr}.
 }
 
 \seealso{
-\code{ \link{cln.bcr}, \link{cln.contour}, \link{cln.mle}
+\code{ \link{cln.cr}, \link{cln.contour}, \link{cln.mle}
 }
 }
 
@@ -71,6 +76,6 @@ y <- y / rowSums(y)
 mod <- cln.mle(y)
 m <- mod$m
 S <- mod$S
-cln.cr(y, m, S, ploty = FALSE)
+cln.bcr(y, m, S, R= 300, ploty = FALSE)
 }
 

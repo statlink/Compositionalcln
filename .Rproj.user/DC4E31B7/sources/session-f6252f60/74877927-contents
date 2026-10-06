@@ -24,7 +24,7 @@ The tolerance value to terminate the EM algorithm.
 The maximum number of iterations allowed for the EM algorithm.
 }
 \item{R}{
-The number of bootstrap resamples to generate.
+The number of bootstrap resamples to perform.
 }
 }
 
