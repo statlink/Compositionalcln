@@ -1,27 +1,27 @@
 {
-    "id": "C842BD01",
-    "path": "~/GitHub/Compositionalcln/man/cln.cr.Rd",
-    "project_path": "man/cln.cr.Rd",
-    "type": "r_doc",
+    "id": "C2368360",
+    "path": "~/GitHub/Compositionalcln/R/boot.clnmle.R",
+    "project_path": "R/boot.clnmle.R",
+    "type": "r_source",
     "hash": "0",
     "contents": "",
     "dirty": false,
-    "created": 1791309051238.0,
+    "created": 1791315799420.0,
     "source_on_save": false,
     "relative_order": 1,
     "properties": {
         "tempName": "Untitled1",
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "16,38",
-        "scrollLine": "0"
+        "cursorPosition": "76,29",
+        "scrollLine": "58"
     },
     "folds": "",
-    "lastKnownWriteTime": 1791309076,
+    "lastKnownWriteTime": 1791315392,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1791309076186,
+    "last_content_update": 1791315392,
     "read_only": false,
     "read_only_alternatives": []
 }
