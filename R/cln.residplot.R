@@ -27,7 +27,7 @@ cln.residplot <- function(y, m = NULL, S, x = NULL, beta = NULL) {
 
   qq <- qqnorm(z, plot.it = FALSE)
   plot(qq, pch = 16, col = ifelse(haszero, "red", "grey40"), cex.axis = 1.3, cex.lab = 1.3,
-       xlab = "Theoretical N(0,1) quantiles", ylab = expression("Normal scores of the " * x^2 *" p-values"))
+       xlab = "Theoretical N(0,1) quantiles", ylab = expression("Normal scores of the p-values"))
   abline(0, 1)
   legend("topleft", pch = 16, col = c("grey40", "red"), bty = "n",
          legend = c("No zeros", "With zeros"))
