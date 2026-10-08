@@ -2,7 +2,7 @@ Package: Compositionalcln
 Type: Package
 Title: Modelling Compositional Data with Zero Values
 Version: 1.2
-Date: 2026-10-07
+Date: 2026-10-08
 Authors@R: person("Michail", "Tsagris", role = c("aut", "cre"), email = "mtsagris@uoc.gr")
 Author: Michail Tsagris [aut, cre]
 Maintainer: Michail Tsagris <mtsagris@uoc.gr>
