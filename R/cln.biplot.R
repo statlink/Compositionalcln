@@ -4,7 +4,7 @@ cln.biplot <- function(y, m, S) {
   W <- ( diag(D) - matrix(1 / D, D, D) )[, 1:d]
   e <- eigen( W %*% S %*% t(W), symmetric = TRUE)
   lam <- e$values[dims]  ;  Vp <- e$vectors[, dims, drop = FALSE]
-  P <- diag(1 / sqrt(lam)) %*% t(Vp) %*% W
+  P <- diag(1 / sqrt(lam)) %*% t(Vp)
   G <- Vp %*% diag( sqrt(lam) )
   pve <- 100 * lam / sum( e$values[1:d] )
   labels <- colnames(y)
@@ -49,7 +49,13 @@ cln.biplot <- function(y, m, S) {
     K <- S %*% t(Q) %*% solve( Q %*% S %*% t(Q) )
     Z[i, ] <- M[i, ] + K %*% ( b - Q %*% M[i, ] )
   }
-  list(Z = Z, M = M)
+  ## From alr to clr
+  Z <- cbind(Z, 0)
+  Z <- Z - Rfast::rowmeans(Z)
+  M <- cbind(M, 0)
+  M <- M - Rfast::rowmeans(M)
+
+    list(Z = Z, M = M)
 }
 
 

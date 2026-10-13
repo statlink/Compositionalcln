@@ -1,0 +1,85 @@
+\name{cln.pca}
+\alias{cln.pca}
+
+\title{
+Principal component analysis based on the conditional logistic normal model
+}
+
+\description{
+Principal component analysis based on the conditional logistic normal model.
+}
+
+\usage{
+cln.pca(y, m, S)
+}
+
+\arguments{
+\item{y}{
+A vector or a matrix with compositional data with zero values.
+}
+\item{m}{
+The mean vector in \eqn{R^{D-1}}.
+}
+\item{S}{
+The covariance matrix in \eqn{R^{D-1}}.
+}
+}
+
+\details{
+The function first transforms the covariance matrix that is based on the alr transformation to
+the covariance matrix based on the clr transformation. Then, for the vectors with zero values it uses
+the vectors with the estimated zis on the alr-space (see Alzeley and Tsagris, 2026) from the EM algorithm.
+Then it produces the classical principal component analysis.
+}
+
+\value{
+A list including:
+\item{values}{
+A vector with the eigenvalues.
+}
+\item{prop}{
+A vector with the proportion of the eigenvalues
+}
+\item{loadings}{
+A matrix with the estimated loadings
+}
+\item{scores}{
+A vector with the estimated scores.
+}
+}
+
+\references{
+Alzeley O. and Tsagris M. (2026). Modelling compositional data with structural zero values
+https://arxiv.org/pdf/2608.29954
+
+Aitchison J. (1986). The statistical analysis of compositional data.
+}
+
+\author{
+Michail Tsagris.
+
+R implementation and documentation: Michail Tsagris \email{mtsagris@uoc.gr}.
+}
+
+\seealso{
+\code{ \link{cln.biplot}, \link{cln.contour}, \link{cln.mle}
+}
+}
+
+\examples{
+y <- as.matrix(iris[, 1:4])
+y <- y / rowSums(y)
+ind <- sample(150, 10)
+for ( k in ind )  y[k, sample(3, 1)] <- 0
+y <- y / rowSums(y)
+mod <- cln.mle(y)
+pc <- cln.pca(y, mod$m, mod$S)
+sc <- pc$scores[, 1:2]  # centered, but unstandardised
+# orthonormal basis of the clr plane of 3 parts (ilr basis)
+Psi <- cbind( c(1, -1, 0) / sqrt(2), c(1,  1, -2) / sqrt(6) )
+est <- tcrossprod( sc, Psi)
+phat <- exp(est)  ;  phat <- est / rowSums(est)
+ternary(phat)
+}
+
+
