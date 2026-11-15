@@ -34,13 +34,17 @@ The number of bootstrap resamples to generate.
 
 \details{
 Bootstrap to estimate the covariance matrix of the coefficients of the conditional
-logistic normal regression is performed.
+logistic normal regression is performed. The compositions without and with zeros are
+resampled separately, so their numbers stay fixed, and each resample is fitted by the EM
+algorithm (in C++), starting from the estimates of the original sample. Use \code{set.seed()}
+for reproducible results.
 }
 
 \value{
 A list including:
 \item{beta}{
-The bootstrapped beta coefficients.
+The bootstrapped beta coefficients, one row per resample. Each row is the coefficient matrix
+stacked by column (all covariates of the first log-ratio, then the second, and so on).
 }
 \item{sigma}{
 The bootstrap estimate of the covariance matrix of the regression parameters.
@@ -77,6 +81,6 @@ y <- y / rowSums(y)
 ind <- sample(150, 10)
 for ( k in ind )  y[k, sample(3, 1)] <- 0
 y <- y / rowSums(y)
-mod <- cln.reg(y, x)
+mod <- boot.clnreg(y, x, R = 500)
 }
 

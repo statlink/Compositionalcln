@@ -1,6 +1,5 @@
 \name{cln.reg}
 \alias{cln.reg}
-\alias{cln.reg2}
 \title{
 Conditional logistic normal regression
 }
@@ -11,7 +10,6 @@ Conditional logistic normal regression.
 
 \usage{
 cln.reg(y, x, tol = 1e-6, maxit = 500, seb = FALSE, xnew = NULL)
-cln.reg2(y, x, tol = 1e-6, maxit = 500, seb = FALSE, xnew = NULL)
 }
 
 \arguments{
@@ -43,8 +41,8 @@ The contributions of the non zero compositional values and the contributions of 
 vectors with at least one zero value. The second component may have many different sub-categories,
 one for each pattern of zeros.
 
-The function \code{cln.reg2} is a C++ implementation of \code{cln.reg} and returns the same output.
-It is considerably faster, especially when the standard errors are requested (seb = TRUE).
+The function is a C++ implementation. It is considerably faster, especially when the standard errors 
+are requested (seb = TRUE).
 }
 
 \value{
@@ -104,6 +102,5 @@ ind <- sample(150, 10)
 for ( k in ind )  y[k, sample(3, 1)] <- 0
 y <- y / rowSums(y)
 mod <- cln.reg(y, x)
-mod2 <- cln.reg2(y, x)
 }
 

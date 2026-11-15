@@ -1,6 +1,5 @@
 \name{cln.mle}
 \alias{cln.mle}
-\alias{cln.mle2}
 
 \title{
 Maximum likelihood estimation of the conditional logistic normal model
@@ -12,7 +11,6 @@ Maximum likelihood estimation of the conditional logistic normal model.
 
 \usage{
 cln.mle(y, tol = 1e-6, maxit = 500)
-cln.mle2(y, tol = 1e-6, maxit = 500)
 }
 
 \arguments{
@@ -29,10 +27,9 @@ The maximum number of iterations allowed for the EM algorithm.
 
 \details{
 The function fits the conditional multivariate logistic normal distribution (Alzeley and Tsagris, 2026).
-
-The function \code{cln.mle2} is a C++ implementation of \code{cln.mle} and returns the same output.
-The observations with zero values are grouped by their pattern of zeros, so the conditional
-moments of the E-step are computed once per pattern, which makes it considerably faster.
+The function is a C++ implementation. The observations with zero values are grouped by their pattern of 
+zeros, so the conditional moments of the E-step are computed once per pattern, which makes it 
+considerably faster.
 }
 
 \value{
@@ -88,7 +85,6 @@ ind <- sample(150, 10)
 for ( k in ind )  y[k, sample(3, 1)] <- 0
 y <- y / rowSums(y)
 cln.mle(y)
-cln.mle2(y)
 }
 
 

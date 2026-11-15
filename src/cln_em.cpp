@@ -1,6 +1,6 @@
 // C++ (RcppArmadillo) implementation of the EM algorithm for the
 // conditional logistic normal (CLN) model and CLN regression.
-// Used by cln.mle2() and cln.reg2().
+// Used by cln.mle(), cln.reg(), boot.clnmle() and boot.clnreg().
 //
 // Rows of y are split into the complete ones (no zeros) and the ones with
 // at least one zero. The latter are grouped by their zero pattern, because
@@ -152,24 +152,29 @@ double estep(const Data& dat, const mat& Mu2, const mat& S, mat& Ez, std::vector
   return ll;
 }
 
-}  // namespace
 
+// ---------------------------------------------------------------------------
+// EM cores, shared by the single fits and the bootstraps
+// ---------------------------------------------------------------------------
 
-// [[Rcpp::export(".cln_mle_cpp", rng = false)]]
-Rcpp::List cln_mle_cpp(const arma::mat& y, const double tol, const int maxit) {
-  const Data dat = prepare(y);
-  const int n = dat.n, d = dat.d, n1 = dat.n1, n2 = dat.n2;
-  if ( n1 < 2 )  Rcpp::stop("At least two compositions without zeros are required.");
+struct MleFit { rowvec m; mat S; double loglik; int iters; };
 
+// starting values: mean and MLE covariance of the alr of the complete rows
+void mle_start(const Data& dat, rowvec& m, mat& S) {
+  m = mean(dat.full, 0);
+  const mat C = dat.full.each_row() - m;
+  S = C.t() * C / dat.n1;
+}
+
+MleFit em_mle(const Data& dat, rowvec m, mat S, const double tol, const int maxit) {
+  const int n = dat.n, d = dat.d, n2 = dat.n2;
+  if ( dat.n1 < 2 )  Rcpp::stop("At least two compositions without zeros are required.");
   const rowvec mfull = sum(dat.full, 0);
   const mat sfull = dat.full.t() * dat.full;
-  rowvec m = mfull / n1;
-  mat S = ( sfull - n1 * m.t() * m ) / n1;           // ((n1 - 1)/n1) * var(full)
 
   mat Ez(n2, d, fill::zeros);
   std::vector<mat> V( dat.pats.size() );
-
-  // loglik at the current parameters; the E-step quantities come for free
+  // log-likelihood at the current parameters; the E-step quantities come for free
   double ll_old = ll_complete( dat.full.each_row() - m, S ) +
                   estep(dat, repmat(m, n2, 1), S, Ez, V) - dat.sly;
   double ll_new = ll_old;
@@ -188,9 +193,91 @@ Rcpp::List cln_mle_cpp(const arma::mat& y, const double tol, const int maxit) {
     ll_old = ll_new;
   }
   if ( it > maxit )  it = maxit;
+  MleFit f;  f.m = m;  f.S = S;  f.loglik = ll_new;  f.iters = it;
+  return f;
+}
 
-  return Rcpp::List::create( Rcpp::Named("m") = m, Rcpp::Named("S") = S,
-                             Rcpp::Named("loglik") = ll_new, Rcpp::Named("iters") = it );
+struct RegFit {
+  mat B, S;  double loglik;  int iters;
+  mat Ez_prev;  std::vector<mat> V_prev;      // E-step used for the last update (for the s.e.)
+};
+
+// starting values: OLS on the complete rows
+void reg_start(const Data& dat, const mat& x1, mat& B, mat& S) {
+  if ( !solve( B, x1.t() * x1, x1.t() * dat.full, solve_opts::likely_sympd + solve_opts::no_approx ) )
+    Rcpp::stop("The design matrix of the compositions without zeros is singular (collinear covariates?).");
+  const mat res1 = dat.full - x1 * B;
+  S = res1.t() * res1 / dat.n1;
+  S = 0.5 * ( S + S.t() );
+}
+
+RegFit em_reg(const Data& dat, const mat& x1, const mat& x2, mat B, mat S,
+              const double tol, const int maxit) {
+  const int n = dat.n, d = dat.d, n2 = dat.n2;
+  if ( dat.n1 <= (int)x1.n_cols )
+    Rcpp::stop("The compositions without zeros must be more than the columns of the design matrix.");
+  const mat& full = dat.full;
+  const mat XtX = x1.t() * x1 + x2.t() * x2;
+  const mat Xtfull = x1.t() * full;
+
+  mat Ez(n2, d, fill::zeros), Ez_prev;
+  std::vector<mat> V( dat.pats.size() ), V_prev;
+  mat res1 = full - x1 * B;
+  double ll_old = ll_complete(res1, S) + estep(dat, x2 * B, S, Ez, V) - dat.sly;
+  double ll_new = ll_old;
+  int it;
+  for ( it = 1; it <= maxit; ++it ) {
+    // M-step
+    mat EzzVarSum(d, d, fill::zeros);
+    for ( size_t k = 0; k < dat.pats.size(); ++k )  EzzVarSum += dat.pats[k].rows.n_elem * V[k];
+    if ( !solve( B, XtX, Xtfull + x2.t() * Ez, solve_opts::likely_sympd + solve_opts::no_approx ) )
+      Rcpp::stop("The design matrix is singular (collinear covariates?).");
+    res1 = full - x1 * B;
+    const mat res2 = Ez - x2 * B;
+    S = ( res1.t() * res1 + res2.t() * res2 + EzzVarSum ) / n;
+    S = 0.5 * ( S + S.t() );
+    Ez_prev = Ez;  V_prev = V;
+    // log-likelihood at the new parameters + E-step for the next iteration
+    ll_new = ll_complete(res1, S) + estep(dat, x2 * B, S, Ez, V) - dat.sly;
+    if ( std::abs(ll_new - ll_old) < tol )  break;
+    ll_old = ll_new;
+  }
+  if ( it > maxit )  it = maxit;
+  if ( maxit < 1 ) { Ez_prev = Ez;  V_prev = V; }
+  RegFit f;  f.B = B;  f.S = S;  f.loglik = ll_new;  f.iters = it;
+  f.Ez_prev = Ez_prev;  f.V_prev = V_prev;
+  return f;
+}
+
+// Stratified non-parametric bootstrap indices: the complete rows and the rows with
+// zeros are resampled separately, so every resample keeps n1 and n2 fixed.
+// R's RNG is used, so set.seed() makes the results reproducible.
+uvec boot_index(const uvec& idx1, const uvec& idx2) {
+  const uword n1 = idx1.n_elem, n2 = idx2.n_elem;
+  uvec id(n1 + n2);
+  for ( uword i = 0; i < n1; ++i ) {
+    uword j = (uword)( n1 * R::unif_rand() );  if ( j >= n1 )  j = n1 - 1;
+    id[i] = idx1[j];
+  }
+  for ( uword i = 0; i < n2; ++i ) {
+    uword j = (uword)( n2 * R::unif_rand() );  if ( j >= n2 )  j = n2 - 1;
+    id[n1 + i] = idx2[j];
+  }
+  return id;
+}
+
+}  // namespace
+
+
+// [[Rcpp::export(".cln_mle_cpp", rng = false)]]
+Rcpp::List cln_mle_cpp(const arma::mat& y, const double tol, const int maxit) {
+  const Data dat = prepare(y);
+  if ( dat.n1 < 2 )  Rcpp::stop("At least two compositions without zeros are required.");
+  rowvec m;  mat S;
+  mle_start(dat, m, S);
+  const MleFit f = em_mle(dat, m, S, tol, maxit);
+  return Rcpp::List::create( Rcpp::Named("m") = f.m, Rcpp::Named("S") = f.S,
+                             Rcpp::Named("loglik") = f.loglik, Rcpp::Named("iters") = f.iters );
 }
 
 
@@ -267,58 +354,89 @@ static mat louis_se(const Data& dat, const mat& B, const mat& S, const mat& X, c
 }
 
 
+
 // [[Rcpp::export(".cln_reg_cpp", rng = false)]]
 Rcpp::List cln_reg_cpp(const arma::mat& y, const arma::mat& x, const double tol,
                        const int maxit, const bool seb) {
   const Data dat = prepare(y);
-  const int n = dat.n, d = dat.d, n1 = dat.n1, n2 = dat.n2;
-  const int p = x.n_cols;
-  if ( n1 <= p )
+  if ( dat.n1 <= (int)x.n_cols )
     Rcpp::stop("The compositions without zeros must be more than the columns of the design matrix.");
-
   const mat x1 = x.rows(dat.idx1), x2 = x.rows(dat.idx2);
-  const mat X = join_cols(x1, x2);
-  const mat& full = dat.full;
+  mat B, S;
+  reg_start(dat, x1, B, S);
+  const RegFit f = em_reg(dat, x1, x2, B, S, tol, maxit);
 
-  // starting values: OLS on the complete cases
-  mat B = solve( x1.t() * x1, x1.t() * full, solve_opts::likely_sympd );
-  mat res1 = full - x1 * B;
-  mat S = res1.t() * res1 / n1;
-  S = 0.5 * ( S + S.t() );
-
-  const mat XtX = X.t() * X;
-  const mat Xtfull = x1.t() * full;
-
-  mat Ez(n2, d, fill::zeros), Ez_prev;
-  std::vector<mat> V( dat.pats.size() ), V_prev;
-
-  double ll_old = ll_complete(res1, S) + estep(dat, x2 * B, S, Ez, V) - dat.sly;
-  double ll_new = ll_old;
-  int it;
-  for ( it = 1; it <= maxit; ++it ) {
-    // M-step
-    mat EzzVarSum(d, d, fill::zeros);
-    for ( size_t k = 0; k < dat.pats.size(); ++k )  EzzVarSum += dat.pats[k].rows.n_elem * V[k];
-    B = solve( XtX, Xtfull + x2.t() * Ez, solve_opts::likely_sympd );
-    res1 = full - x1 * B;
-    const mat res2 = Ez - x2 * B;
-    S = ( res1.t() * res1 + res2.t() * res2 + EzzVarSum ) / n;
-    S = 0.5 * ( S + S.t() );
-    // keep the E-step quantities used for this update (needed for the standard errors)
-    Ez_prev = Ez;  V_prev = V;
-    // log-likelihood at the new parameters + E-step for the next iteration
-    ll_new = ll_complete(res1, S) + estep(dat, x2 * B, S, Ez, V) - dat.sly;
-    if ( std::abs(ll_new - ll_old) < tol )  break;
-    ll_old = ll_new;
-  }
-  if ( it > maxit )  it = maxit;
-
-  Rcpp::List out = Rcpp::List::create( Rcpp::Named("beta") = B, Rcpp::Named("S") = S,
-                                       Rcpp::Named("loglik") = ll_new, Rcpp::Named("iters") = it );
+  Rcpp::List out = Rcpp::List::create( Rcpp::Named("beta") = f.B, Rcpp::Named("S") = f.S,
+                                       Rcpp::Named("loglik") = f.loglik, Rcpp::Named("iters") = f.iters );
   if ( seb ) {
-    if ( maxit < 1 ) { Ez_prev = Ez;  V_prev = V; }
-    const mat res2 = Ez_prev - x2 * B;
-    out["se.beta"] = louis_se(dat, B, S, X, x2, V_prev, res2);
+    const mat X = join_cols(x1, x2);
+    const mat res2 = f.Ez_prev - x2 * f.B;
+    out["se.beta"] = louis_se(dat, f.B, f.S, X, x2, f.V_prev, res2);
   }
   return out;
+}
+
+
+// Bootstrap of the CLN MLE. Each resample is fitted by EM, started from the MLE of the
+// original sample. A resample whose fit fails is returned as NA and counted in "fails".
+// [[Rcpp::export(".cln_bootmle_cpp")]]
+Rcpp::List cln_bootmle_cpp(const arma::mat& y, const double tol, const int maxit, const int R) {
+  const Data dat = prepare(y);
+  if ( dat.n1 < 2 )  Rcpp::stop("At least two compositions without zeros are required.");
+  const int d = dat.d;
+  rowvec m0;  mat S0;
+  mle_start(dat, m0, S0);
+  const MleFit f0 = em_mle(dat, m0, S0, tol, maxit);
+
+  mat bm(R, d);  cube bS(d, d, R);
+  ivec iters(R);
+  int fails = 0;
+  for ( int r = 0; r < R; ++r ) {
+    if ( r % 10 == 0 )  Rcpp::checkUserInterrupt();
+    const uvec id = boot_index(dat.idx1, dat.idx2);
+    try {
+      const Data db = prepare( y.rows(id) );
+      const MleFit f = em_mle(db, f0.m, f0.S, tol, maxit);
+      bm.row(r) = f.m;  bS.slice(r) = f.S;  iters[r] = f.iters;
+    } catch ( std::exception& e ) {
+      bm.row(r).fill(datum::nan);  bS.slice(r).fill(datum::nan);  iters[r] = NA_INTEGER;  ++fails;
+    }
+  }
+  return Rcpp::List::create( Rcpp::Named("m") = bm, Rcpp::Named("S") = bS,
+                             Rcpp::Named("iters") = iters, Rcpp::Named("fails") = fails );
+}
+
+
+// Bootstrap of the CLN regression coefficients. Each resample is fitted by EM, started
+// from the MLE of the original sample. Row r of "beta" is vec(B) of resample r
+// (column-major, i.e. the covariates vary fastest). Failed fits are NA.
+// [[Rcpp::export(".cln_bootreg_cpp")]]
+Rcpp::List cln_bootreg_cpp(const arma::mat& y, const arma::mat& x, const double tol,
+                           const int maxit, const int R) {
+  const Data dat = prepare(y);
+  const int p = x.n_cols, d = dat.d;
+  if ( dat.n1 <= p )
+    Rcpp::stop("The compositions without zeros must be more than the columns of the design matrix.");
+  const mat x1 = x.rows(dat.idx1), x2 = x.rows(dat.idx2);
+  mat B0, S0;
+  reg_start(dat, x1, B0, S0);
+  const RegFit f0 = em_reg(dat, x1, x2, B0, S0, tol, maxit);
+
+  mat bbe(R, p * d);
+  ivec iters(R);
+  int fails = 0;
+  for ( int r = 0; r < R; ++r ) {
+    if ( r % 10 == 0 )  Rcpp::checkUserInterrupt();
+    const uvec id = boot_index(dat.idx1, dat.idx2);
+    try {
+      const Data db = prepare( y.rows(id) );
+      const mat xb = x.rows(id);
+      const RegFit f = em_reg(db, xb.rows(db.idx1), xb.rows(db.idx2), f0.B, f0.S, tol, maxit);
+      bbe.row(r) = vectorise(f.B).t();  iters[r] = f.iters;
+    } catch ( std::exception& e ) {
+      bbe.row(r).fill(datum::nan);  iters[r] = NA_INTEGER;  ++fails;
+    }
+  }
+  return Rcpp::List::create( Rcpp::Named("beta") = bbe, Rcpp::Named("iters") = iters,
+                             Rcpp::Named("fails") = fails );
 }

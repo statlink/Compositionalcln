@@ -37,10 +37,41 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cln_bootmle_cpp
+Rcpp::List cln_bootmle_cpp(const arma::mat& y, const double tol, const int maxit, const int R);
+RcppExport SEXP _Compositionalcln_cln_bootmle_cpp(SEXP ySEXP, SEXP tolSEXP, SEXP maxitSEXP, SEXP RSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< const int >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< const int >::type R(RSEXP);
+    rcpp_result_gen = Rcpp::wrap(cln_bootmle_cpp(y, tol, maxit, R));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cln_bootreg_cpp
+Rcpp::List cln_bootreg_cpp(const arma::mat& y, const arma::mat& x, const double tol, const int maxit, const int R);
+RcppExport SEXP _Compositionalcln_cln_bootreg_cpp(SEXP ySEXP, SEXP xSEXP, SEXP tolSEXP, SEXP maxitSEXP, SEXP RSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< const int >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< const int >::type R(RSEXP);
+    rcpp_result_gen = Rcpp::wrap(cln_bootreg_cpp(y, x, tol, maxit, R));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_Compositionalcln_cln_mle_cpp", (DL_FUNC) &_Compositionalcln_cln_mle_cpp, 3},
     {"_Compositionalcln_cln_reg_cpp", (DL_FUNC) &_Compositionalcln_cln_reg_cpp, 5},
+    {"_Compositionalcln_cln_bootmle_cpp", (DL_FUNC) &_Compositionalcln_cln_bootmle_cpp, 4},
+    {"_Compositionalcln_cln_bootreg_cpp", (DL_FUNC) &_Compositionalcln_cln_bootreg_cpp, 5},
     {NULL, NULL, 0}
 };
 

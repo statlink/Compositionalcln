@@ -30,7 +30,10 @@ The number of bootstrap resamples to generate.
 
 \details{
 The function performs non-parametric bootstrap for the conditional multivariate
-logistic normal distribution (Alzeley and Tsagris, 2026).
+logistic normal distribution (Alzeley and Tsagris, 2026). The compositions without and with
+zeros are resampled separately, so their numbers stay fixed, and each resample is fitted by
+the EM algorithm (in C++), starting from the estimates of the original sample. Use
+\code{set.seed()} for reproducible results.
 }
 
 \value{

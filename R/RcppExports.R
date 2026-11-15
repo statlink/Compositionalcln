@@ -9,3 +9,11 @@
     .Call(`_Compositionalcln_cln_reg_cpp`, y, x, tol, maxit, seb)
 }
 
+.cln_bootmle_cpp <- function(y, tol, maxit, R) {
+    .Call(`_Compositionalcln_cln_bootmle_cpp`, y, tol, maxit, R)
+}
+
+.cln_bootreg_cpp <- function(y, x, tol, maxit, R) {
+    .Call(`_Compositionalcln_cln_bootreg_cpp`, y, x, tol, maxit, R)
+}
+
