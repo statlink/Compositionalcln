@@ -1,0 +1,109 @@
+\name{cln.reg}
+\alias{cln.reg}
+\alias{cln.reg2}
+\title{
+Conditional logistic normal regression
+}
+
+\description{
+Conditional logistic normal regression.
+}
+
+\usage{
+cln.reg(y, x, tol = 1e-6, maxit = 500, seb = FALSE, xnew = NULL)
+cln.reg2(y, x, tol = 1e-6, maxit = 500, seb = FALSE, xnew = NULL)
+}
+
+\arguments{
+\item{y}{
+A matrix with the compositional data (dependent variable). The number of observations
+(vectors) with no zero values should be more than the columns of the predictor variables.
+Otherwise, the initial values will not be calculated.
+}
+\item{x}{
+The predictor variable(s), they can be either continnuous or categorical or both.
+}
+\item{tol}{
+The tolerance value to terminate the EM algorithm.
+}
+\item{maxit}{
+The maximum number of iterations allowed for the EM algorithm.
+}
+\item{seb}{
+If you want the standard errors of the regression coefficients set this to TRUE.
+}
+\item{xnew}{
+If you have new data use it, otherwise leave it NULL.
+}
+}
+
+\details{
+The conditional logistic normal regression is being fitted. The likelihood conists of two components.
+The contributions of the non zero compositional values and the contributions of the compositional
+vectors with at least one zero value. The second component may have many different sub-categories,
+one for each pattern of zeros.
+
+The function \code{cln.reg2} is a C++ implementation of \code{cln.reg} and returns the same output.
+It is considerably faster, especially when the standard errors are requested (seb = TRUE).
+}
+
+\value{
+A list including:
+\item{patterns}{
+A matrix with the patterns of zeros, where the value of 0 indicates the presence of a zero,
+and the last column contains the percentage of occurrence each pattern. This is useful for
+random values simulation.
+}
+\item{iters}{
+The number of iterations required by the EM algorithm.
+}
+\item{loglik}{
+The value of the log-likelihood.
+}
+\item{BIC}{
+The BIC of the regression model.
+}
+\item{S}{
+The covariance of the latent residuals.
+}
+\item{beta}{
+The beta coefficients.
+}
+\item{est}{
+The fitted or the predicted values (if xnew is not NULL).
+}
+}
+
+\references{
+Alzeley O. and Tsagris M. (2026). Modelling compositional data with structural zero values
+https://arxiv.org/pdf/2608.29954
+
+Aitchison J. (1986). The statistical analysis of compositional data, pages 272--274.
+}
+
+
+\author{
+Michail Tsagris.
+
+R implementation and documentation: Michail Tsagris \email{mtsagris@uoc.gr}.
+}
+
+%\note{
+%%  ~~further notes~~
+%}
+
+\seealso{
+\code{\link{cln.mle}
+}
+}
+
+\examples{
+x <- as.vector(iris[, 4])
+y <- as.matrix(iris[, 1:3])
+ind <- sample(150, 10)
+for ( k in ind )  y[k, sample(3, 1)] <- 0
+y <- y / rowSums(y)
+mod <- cln.reg(y, x)
+mod2 <- cln.reg2(y, x)
+}
+
