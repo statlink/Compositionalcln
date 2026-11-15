@@ -1,6 +1,6 @@
 {
     "id": "3A74FA3A",
-    "path": "C:/Users/mtsag/Desktop/Compositionalcln/R/cln.mle.R",
+    "path": "~/GitHub/Compositionalcln/R/cln.mle.R",
     "project_path": "R/cln.mle.R",
     "type": "r_source",
     "hash": "0",
@@ -13,7 +13,7 @@
         "source_window_id": "",
         "Source": "Source",
         "cursorPosition": "21,31",
-        "scrollLine": "5"
+        "scrollLine": "0"
     },
     "folds": "",
     "lastKnownWriteTime": 1794749686,

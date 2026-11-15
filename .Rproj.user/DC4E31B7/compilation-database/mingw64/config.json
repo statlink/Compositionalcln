@@ -14,12 +14,12 @@
         "-IC:/rtools45/x86_64-w64-mingw32.static.posix/bin/../lib/gcc/x86_64-w64-mingw32.static.posix/14.3.0/../../../../include",
         "-IC:/rtools45/x86_64-w64-mingw32.static.posix/bin/../lib/gcc/x86_64-w64-mingw32.static.posix/14.3.0/include-fixed",
         "-include",
-        "C:/Users/mtsag/Desktop/Compositionalcln/.Rproj.user/DC4E31B7/compilation-database/mingw64/cpp-definitions.h"
+        "C:/Users/mtsag/Documents/GitHub/Compositionalcln/.Rproj.user/DC4E31B7/compilation-database/mingw64/cpp-definitions.h"
     ],
     "pch": "RcppArmadillo",
     "is_cpp": true,
     "hash": "179474944017947487661794748766",
-    "compiler": "16001004037050314525",
+    "compiler": "588193333979124157",
     "rversion": "4.6.1",
     "dbversion": 4
 }
