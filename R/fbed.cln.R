@@ -10,7 +10,7 @@ fbed.cln <- function(y, X, prior = NULL, alpha = 0.05, univ = NULL, K = 0, tol =
   runtime <- proc.time()
   if ( is.null(univ) ) {
     if ( is.null(prior) ) {
-       univ <- Compositionalcln::cln.regs(y, X)
+       univ <- Compositionalcln::cln.regs(y, X, tol, maxit)
     } else  univ <- Compositionalcln::cln.condregs(y, X, prior, tol, maxit)
 
     stat <- univ$stat
@@ -106,7 +106,7 @@ fbed.cln <- function(y, X, prior = NULL, alpha = 0.05, univ = NULL, K = 0, tol =
       card <- c(card, sum(sela > 0) )
 
       vim <- 1
-      while ( vim < K  &  card[vim + 1] - card[vim] > 0  &  sela < p ) {
+      while ( vim < K  &  card[vim + 1] - card[vim] > 0  &  length(sela) < p ) {
         vim <- vim + 1
         mod <- Compositionalcln::cln.condregs(y, X[, -sela, drop = FALSE], prior = cbind(prior, X[, sela]), tol, maxit)
         n.tests[vim + 1] <- length( ind[-sela] )

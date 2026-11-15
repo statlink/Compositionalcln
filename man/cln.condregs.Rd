@@ -36,7 +36,11 @@ The maximum number of iterations allowed for the EM algorithm.
 \details{
 A conditional logistic normal regression is being fitted for each of the columns
 of X. The difference from \code{\link{cln.regs}}, is that this time, each of the
-the regression models fit contain the \emph{prior} variables.
+the regression models fit contain the \emph{prior} variables. Each model is compared to
+the model with the \emph{prior} variables only via the log-likelihood ratio test. The EM
+algorithm is implemented in C++. If a regression cannot be fitted (e.g. the predictor is
+constant or collinear with the \emph{prior} variables) its statistic and p-value are NA and
+a warning is issued.
 }
 
 \value{

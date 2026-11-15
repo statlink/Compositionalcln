@@ -440,3 +440,57 @@ Rcpp::List cln_bootreg_cpp(const arma::mat& y, const arma::mat& x, const double 
   return Rcpp::List::create( Rcpp::Named("beta") = bbe, Rcpp::Named("iters") = iters,
                              Rcpp::Named("fails") = fails );
 }
+
+
+// Many CLN regressions. For each column j of X, the model with an intercept, X[, j] and the
+// fixed covariates P (n x q, possibly q = 0) is compared to the model with an intercept and P
+// only, by a log-likelihood ratio test with d degrees of freedom. The zero patterns are
+// processed once and shared by all fits. A regression whose fit fails returns NA.
+static Rcpp::List many_regs(const Data& dat, const mat& X, const mat& P, const double tol,
+                            const int maxit) {
+  const int p = X.n_cols, q = P.n_cols, d = dat.d;
+  if ( dat.n1 <= q + 2 )
+    Rcpp::stop("The compositions without zeros must be more than the columns of the design matrix.");
+  // design matrices: [1, P] for the null model and [1, x_j, P] for the alternatives
+  mat x01( dat.n1, q + 1, fill::ones ), x02( dat.n2, q + 1, fill::ones );
+  mat x1( dat.n1, q + 2, fill::ones ), x2( dat.n2, q + 2, fill::ones );
+  if ( q > 0 ) {
+    x01.cols(1, q) = P.rows(dat.idx1);      x02.cols(1, q) = P.rows(dat.idx2);
+    x1.cols(2, q + 1) = P.rows(dat.idx1);   x2.cols(2, q + 1) = P.rows(dat.idx2);
+  }
+  mat B0, S0;
+  reg_start(dat, x01, B0, S0);
+  const double ll0 = em_reg(dat, x01, x02, B0, S0, tol, maxit).loglik;
+
+  const mat X1 = X.rows(dat.idx1), X2 = X.rows(dat.idx2);
+  vec stat(p), pvalue(p);
+  int fails = 0;
+  for ( int j = 0; j < p; ++j ) {
+    if ( j % 10 == 0 )  Rcpp::checkUserInterrupt();
+    x1.col(1) = X1.col(j);  x2.col(1) = X2.col(j);
+    try {
+      mat B, S;
+      reg_start(dat, x1, B, S);
+      const RegFit f = em_reg(dat, x1, x2, B, S, tol, maxit);
+      stat[j] = 2.0 * ( f.loglik - ll0 );
+      pvalue[j] = R::pchisq(stat[j], d, 0, 1);    // upper tail, log scale
+    } catch ( std::exception& e ) {
+      stat[j] = NA_REAL;  pvalue[j] = NA_REAL;  ++fails;
+    }
+  }
+  return Rcpp::List::create( Rcpp::Named("stat") = stat, Rcpp::Named("pvalue") = pvalue,
+                             Rcpp::Named("fails") = fails );
+}
+
+// [[Rcpp::export(".cln_regs_cpp", rng = false)]]
+Rcpp::List cln_regs_cpp(const arma::mat& y, const arma::mat& X, const double tol, const int maxit) {
+  const Data dat = prepare(y);
+  return many_regs(dat, X, mat(y.n_rows, 0), tol, maxit);
+}
+
+// [[Rcpp::export(".cln_condregs_cpp", rng = false)]]
+Rcpp::List cln_condregs_cpp(const arma::mat& y, const arma::mat& X, const arma::mat& P,
+                            const double tol, const int maxit) {
+  const Data dat = prepare(y);
+  return many_regs(dat, X, P, tol, maxit);
+}

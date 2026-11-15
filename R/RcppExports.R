@@ -17,3 +17,11 @@
     .Call(`_Compositionalcln_cln_bootreg_cpp`, y, x, tol, maxit, R)
 }
 
+.cln_regs_cpp <- function(y, X, tol, maxit) {
+    .Call(`_Compositionalcln_cln_regs_cpp`, y, X, tol, maxit)
+}
+
+.cln_condregs_cpp <- function(y, X, P, tol, maxit) {
+    .Call(`_Compositionalcln_cln_condregs_cpp`, y, X, P, tol, maxit)
+}
+

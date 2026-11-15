@@ -32,7 +32,9 @@ The maximum number of iterations allowed for the EM algorithm.
 
 \details{
 A conditional logistic normal regression is being fitted for each of the columns
-of X.
+of X, and is compared to the intercept-only model (\code{\link{cln.mle}}) via the
+log-likelihood ratio test. The EM algorithm is implemented in C++. If a regression cannot be
+fitted (e.g. the predictor is constant) its statistic and p-value are NA and a warning is issued.
 }
 
 \value{
